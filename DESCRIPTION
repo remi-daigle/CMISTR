@@ -1,0 +1,18 @@
+Package: CMISTR
+Title: Canadian Marine Invasive Screening Tool in R
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Remi",
+           family = "Daigle",
+           role = c("aut", "cre"),
+           email = "Remi.Daigle@dfo-mpo.gc.ca",
+           comment = c(ORCID = "0000-0001-8832-4189"))
+Description: CMIST is a peer-reviewed screening-level risk assessment tool for marine invasive species (Drolet et al. 2016). It is a short questionnaire that follows the invasion process from arrival to impact and is designed so an informed assessor can evaluate one species in an assessment area in approximately one day using easily accessible information from internet databases, primary literature, and grey literature. Species can be those with an invasion history in an area or those that are candidates for future invasions.
+License: MIT + file LICENSE
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
