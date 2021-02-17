@@ -2,18 +2,20 @@
 % Please edit documentation in R/CMISTScore.R
 \name{CMISTScore}
 \alias{CMISTScore}
-\title{Title}
+\title{Calculate the CMIST Score}
 \usage{
 CMISTScore(risks, uncertainties)
 }
 \arguments{
-\item{uncertainties}{}
+\item{risks}{a vector containing the risk scores of the 17 CMIST questions}
+
+\item{uncertainties}{a vector containing the uncertainty scores of the 17 CMIST questions}
 }
 \value{
 
 }
 \description{
-Title
+Calculate the CMIST Score
 }
 \examples{
 set.seed(11)
