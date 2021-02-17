@@ -2,7 +2,7 @@
 % Please edit documentation in R/simScore.R
 \name{simScore}
 \alias{simScore}
-\title{Title}
+\title{Simulate scores based on risk and uncertainty}
 \usage{
 simScore(risk, certainty, n = 1000)
 }
@@ -13,7 +13,7 @@ simScore(risk, certainty, n = 1000)
 
 }
 \description{
-Title
+Simulate scores based on risk and uncertainty
 }
 \examples{
 scores <- simScore(risk=2,certainty=1)
