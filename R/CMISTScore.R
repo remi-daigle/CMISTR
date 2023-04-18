@@ -14,10 +14,10 @@
 
 CMISTScore <- function(risks,uncertainties){
   if(length(risks)!=17&length(uncertainties)!=17){
-    stop("The 'risks' and 'uncertainties' must have exactly 17 values")
+    warning("The 'risks' and 'uncertainties' should have exactly 17 values")
   }
   if(!all(unique(c(risks,uncertainties))%in%c(1:3))){
-    stop("The 'risks' and 'uncertainties' vectors must only contain the integers 1, 2, and 3")
+    warning("The 'risks' and 'uncertainties' vectors should only contain the integers 1, 2, and 3")
   }
 
 
