@@ -23,7 +23,7 @@ CMISTScore <- function(risks,uncertainties){
 
 #input data
   input <- data.frame(risks,uncertainties)%>% 
-    mutate(g=as.numeric(row.names(.)))
+    dplyr::mutate(g=as.numeric(row.names(.)))
 
   
   input_noZero<-input%>%
@@ -47,12 +47,12 @@ non.null.list <- lapply(qu_matrix, lapply, function(x)ifelse(is.null(x), NA, x))
 
 #convert list to dataframe containing id and list
 df<-as.data.frame(do.call(cbind, non.null.list))%>%
-  unnest(V1)%>%
-  mutate(g=as.numeric(g),
+  tidyr::unnest(V1)%>%
+  dplyr::mutate(g=as.numeric(g),
          V1=as.numeric(V1))
 
 #rejoin dataframes
-rawrisks<-left_join(input, df, by="g")
+rawrisks<-dplyr::left_join(input, df, by="g")
 rawrisks[rawrisks=="NULL"]<-NA
 
 
@@ -67,8 +67,12 @@ rawscores_imp<-rawrisks%>%
   dplyr::summarise(impact=mean(V1, na.rm=T))%>%
   dplyr::select(impact)
 
-rawscores<-merge(rawscores_like, rawscores_imp, by.x=0, by.y=0, all=T)%>%
-  mutate(score=likelihood*impact)
+rawscores<-merge(rawscores_like, rawscores_imp, by.x=0, by.y=0, all=T)
+rawscores[rawscores=="NaN"]<-NA
+rawscores<-rawscores%>%
+  dplyr::mutate(score= dplyr::case_when( likelihood != "NA" & impact != "NA"~ (likelihood*impact),
+                                  likelihood == "NA" | impact =="NA" ~ (sum(c(likelihood , impact), na.rm=T)))
+  )
                   
   data.frame(CMIST_Score=mean(rawscores$score, na.rm=T),
              CMIST_Upper=quantile(rawscores$score,0.975, na.rm=T),
