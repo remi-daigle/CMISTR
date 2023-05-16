@@ -55,8 +55,6 @@ df<-as.data.frame(do.call(cbind, non.null.list))%>%
   mutate(g=as.numeric(g),
          V1=as.numeric(V1))
 
-  #pivot_wider(names_from = row.names, values_from = V1, values_fn = list)
-
 #rejoin dataframes
 rawrisks<-left_join(input, df, by="g")
 rawrisks[rawrisks=="NULL"]<-NA
@@ -77,13 +75,56 @@ rawrisks[rawrisks=="NULL"]<-NA
 #             impact=mean(V1, na.rm=T))%>%
 #   as.data.frame()
 
-rawscores <- rawrisks%>%
-  mutate(ranges=cut(g, seq(1, 17, 7)))%>%
-  group_by(ranges)%>%
-  mutate(likelihood=mean(V1, na.rm=T),
-         impact=mean(V1, na.rm=T))%>%
-  as.data.frame()%>%
-  select(likelihood, impact)
+
+# rawrisks<-rawrisks%>%
+#   mutate(range=case_when(g%in% c("1", "2", "3", "4", "5", "6", "7", "8")~'likelihood',
+# #                          g %in% c("9", "10", "11", "12", "13", "14", "15", "16", "17")~'impact'))
+# 
+# for(g_ in g_qu){
+#   if(g_ %in% c("1", "2", "3", "4", "5", "6", "7", "8")){
+#   rawscores <- rawrisks%>%
+#     filter(g==g_)%>%
+#     #group_by(g)%>%
+#     summarise(likelihood=mean(V1, na.rm=T))
+#   }else{
+#     rawscores <- rawrisks%>%
+#       filter(g==g_)%>%
+#      # group_by(g)%>%
+#       summarise(impact=mean(V1, na.rm=T))
+#   }
+# }
+
+rawscores_like<-rawrisks%>%
+  dplyr::filter(g %in% c("1", "2", "3", "4", "5", "6", "7", "8"))%>%
+  dplyr::group_by(g)%>%
+  dplyr::summarise(likelihood=mean(V1, na.rm=T))%>%
+  dplyr::select(likelihood)
+rawscores_imp<-rawrisks%>%
+  dplyr::filter(g %in% c("9", "10", "11", "12", "13", "14", "15", "16", "17"))%>%
+  dplyr::group_by(g)%>%
+  dplyr::summarise(impact=mean(V1, na.rm=T))%>%
+  dplyr::select(impact)
+
+rawscores<-merge(rawscores_like, rawscores_imp, by.x=0, by.y=0, all=T)%>%
+  mutate(score=likelihood*impact)
+                   
+                   
+#                    impact=mean(V1[g %in% c("9", "10", "11", "12", "13", "14", "15", "16", "17")], na.rm=T)
+#     # likelihood=case_when(g %in% c("1", "2", "3", "4", "5", "6", "7", "8")~mean(V1, na.rm=T)),
+#     #         impact=case_when(g %in% c("9", "10", "11", "12", "13", "14", "15", "16", "17")~mean(V1, na.rm=T)
+#                              
+#   )
+# 
+# rawscores <- rawrisks%>%
+#   #mutate(ranges=cut(g, seq(1, 17, 7)))%>%
+#   group_by(g)%>%
+#   summarise(likelihood=mean(V1[g %in% c("1", "2", "3", "4", "5", "6", "7", "8")], na.rm=T),
+#          impact=mean(V1[g %in% c("9", "10", "11", "12", "13", "14", "15", "16", "17")], na.rm=T))%>%
+#   ungroup()%>%
+#   mutate(likelihood_final=mean(likelihood),
+#          impact_final=mean(impact))%>%
+#   as.data.frame()%>%
+#   select(likelihood, impact, g)
 
   # rawscores <- do.call("rbind",
   #                      apply(rawrisks,1,function(x){
@@ -97,15 +138,15 @@ rawscores <- rawrisks%>%
   rawscores$score <- rawscores$likelihood*rawscores$impact
   
 
-  data.frame(CMIST_Score=mean(rawscores$score),
-             CMIST_Upper=quantile(rawscores$score,0.975),
-             CMIST_Lower=quantile(rawscores$score,0.025),
-             Likelihood_Score=mean(rawscores$likelihood),
-             Likelihood_Upper=quantile(rawscores$likelihood,0.975),
-             Likelihood_Lower=quantile(rawscores$likelihood,0.025),
-             Impact_Score=mean(rawscores$impact),
-             Impact_Upper=quantile(rawscores$impact,0.975),
-             Impact_Lower=quantile(rawscores$impact,0.025),
+  data.frame(CMIST_Score=mean(rawscores$score, na.rm=T),
+             CMIST_Upper=quantile(rawscores$score,0.975, na.rm=T),
+             CMIST_Lower=quantile(rawscores$score,0.025, na.rm=T),
+             Likelihood_Score=mean(rawscores$likelihood, na.rm=T),
+             Likelihood_Upper=quantile(rawscores$likelihood,0.975, na.rm=T),
+             Likelihood_Lower=quantile(rawscores$likelihood,0.025, na.rm=T),
+             Impact_Score=mean(rawscores$impact, na.rm=T),
+             Impact_Upper=quantile(rawscores$impact,0.975, na.rm=T),
+             Impact_Lower=quantile(rawscores$impact,0.025, na.rm=T),
              row.names = NULL)
 
 }
