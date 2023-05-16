@@ -55,24 +55,36 @@ df<-as.data.frame(do.call(cbind, non.null.list))%>%
 rawrisks<-dplyr::left_join(input, df, by="g")
 rawrisks[rawrisks=="NULL"]<-NA
 
+rawrisks_wider<-rawrisks%>%
+  dplyr::select(g, V1)%>%
+  tidyr::pivot_wider(names_from = g, values_from = V1, values_fn=list)%>%
+  tidyr::unnest(cols=everything())
 
-rawscores_like<-rawrisks%>%
-  dplyr::filter(g %in% c("1", "2", "3", "4", "5", "6", "7", "8"))%>%
-  dplyr::group_by(g)%>%
-  dplyr::summarise(likelihood=mean(V1, na.rm=T))%>%
-  dplyr::select(likelihood)
-rawscores_imp<-rawrisks%>%
-  dplyr::filter(g %in% c("9", "10", "11", "12", "13", "14", "15", "16", "17"))%>%
-  dplyr::group_by(g)%>%
-  dplyr::summarise(impact=mean(V1, na.rm=T))%>%
-  dplyr::select(impact)
+rawscores <- do.call("rbind",
+                     apply(rawrisks_wider,1,function(x){
+                       data.frame(likelihood=mean(x[1:8]),
+                                  impact=mean(x[9:17]))
+                     }))
 
-rawscores<-merge(rawscores_like, rawscores_imp, by.x=0, by.y=0, all=T)
-rawscores[rawscores=="NaN"]<-NA
-rawscores<-rawscores%>%
-  dplyr::mutate(score= dplyr::case_when( likelihood != "NA" & impact != "NA"~ (likelihood*impact),
-                                  likelihood == "NA" | impact =="NA" ~ (sum(c(likelihood , impact), na.rm=T)))
-  )
+rawscores$score <- rawscores$likelihood*rawscores$impact
+
+# rawscores_like<-rawrisks%>%
+#   dplyr::filter(g %in% c("1", "2", "3", "4", "5", "6", "7", "8"))%>%
+#   dplyr::group_by(g)%>%
+#   dplyr::summarise(likelihood=mean(V1, na.rm=T))%>%
+#   dplyr::select(likelihood)
+# rawscores_imp<-rawrisks%>%
+#   dplyr::filter(g %in% c("9", "10", "11", "12", "13", "14", "15", "16", "17"))%>%
+#   dplyr::group_by(g)%>%
+#   dplyr::summarise(impact=mean(V1, na.rm=T))%>%
+#   dplyr::select(impact)
+# 
+# rawscores<-merge(rawscores_like, rawscores_imp, by.x=0, by.y=0, all=T)
+# rawscores[rawscores=="NaN"]<-NA
+# rawscores<-rawscores%>%
+#   dplyr::mutate(score= dplyr::case_when( likelihood != "NA" & impact != "NA"~ (likelihood*impact),
+#                                   likelihood == "NA" | impact =="NA" ~ (((likelihooh*impact), na.rm=T)))
+#   )
                   
   data.frame(CMIST_Score=mean(rawscores$score, na.rm=T),
              CMIST_Upper=quantile(rawscores$score,0.975, na.rm=T),
@@ -86,3 +98,18 @@ rawscores<-rawscores%>%
              row.names = NULL)
 
 }
+
+# #old version
+# input <- data.frame(risks,uncertainties)
+# 
+# rawrisks_old <- apply(input,1,function(x){
+#   CMISTR::simScore(x[1],x[2])
+# })
+# 
+# rawscores <- do.call("rbind",
+#                      apply(rawrisks,1,function(x){
+#                        data.frame(likelihood=mean(x[1:8]),
+#                                   impact=mean(x[9:17]))
+#                      }))
+# 
+# rawscores$score <- rawscores$likelihood*rawscores$impact
