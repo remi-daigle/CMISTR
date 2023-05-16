@@ -24,32 +24,32 @@ CMISTScore <- function(risks,uncertainties){
 #input data
   input <- data.frame(risks,uncertainties)%>% 
     dplyr::mutate(g=as.numeric(row.names(.)))
-
+  
   
   input_noZero<-input%>%
     dplyr::filter(risks>=1 & uncertainties >=1)
   
-g_qu<-unique(input_noZero$g) 
-qu_matrix<-list()
-
-for(g_ in g_qu){
-  input_noZero_nog<- input_noZero[input_noZero$g==g_,]%>%
-    dplyr::select(-g)
+  g_qu<-unique(input_noZero$g) 
+  qu_matrix<-list()
   
-  qu_matrix[[g_]] = apply(input_noZero_nog,1,function(x){
-    CMISTR::simScore(x[1],x[2])
-  })
-}
-
-#remove nulls from lists
-non.null.list <- lapply(qu_matrix, lapply, function(x)ifelse(is.null(x), NA, x))%>%
-  list(g=list(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17))
-
-#convert list to dataframe containing id and list
-df<-as.data.frame(do.call(cbind, non.null.list))%>%
-  tidyr::unnest(V1)%>%
-  dplyr::mutate(g=as.numeric(g),
-         V1=as.numeric(V1))
+  for(g_ in g_qu){
+    input_noZero_nog<- input_noZero[input_noZero$g==g_,]%>%
+      dplyr::select(-g)
+    
+    qu_matrix[[g_]] = apply(input_noZero_nog,1,function(x){
+      CMISTR::simScore(x[1],x[2])
+    })
+  }
+  
+  #remove nulls from lists
+  non.null.list <- lapply(qu_matrix, lapply, function(x)ifelse(is.null(x), NA, x))%>%
+    list(g=list(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17))
+  
+  #convert list to dataframe containing id and list
+  df<-as.data.frame(do.call(cbind, non.null.list))%>%
+    tidyr::unnest(V1)%>%
+    dplyr::mutate(g=as.numeric(g),
+                  V1=as.numeric(V1))
 
 #rejoin dataframes
 rawrisks<-dplyr::left_join(input, df, by="g")
@@ -62,8 +62,8 @@ rawrisks_wider<-rawrisks%>%
 
 rawscores <- do.call("rbind",
                      apply(rawrisks_wider,1,function(x){
-                       data.frame(likelihood=mean(x[1:8]),
-                                  impact=mean(x[9:17]))
+                       data.frame(likelihood=mean(x[1:8], na.rm=T),
+                                  impact=mean(x[9:17], na.rm=T))
                      }))
 
 rawscores$score <- rawscores$likelihood*rawscores$impact
